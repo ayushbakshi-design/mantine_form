@@ -3,7 +3,6 @@
 import { MantineProvider } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { theme } from "../../theme";
-// import { useState } from "react";
 import { DateInput } from "@mantine/dates";
 import {
   Button,
@@ -25,8 +24,33 @@ import "@mantine/dates/styles.css";
 import "@mantine/core/styles/Input.css";
 
 export default function MantineForm() {
+  // interface InitialValues {
+  //   email: string,
+  //   fullname: string,
+  //   gender: string,
+  //   termsOfService: boolean,
+  //   jobType: string,
+  //   age: number,
+  //   date: Date,
+  //   uploadResume: File,
+  //  }
+
+  function ValidateFiles(FileArray: null | Array<File>) {
+    if (FileArray.length < 4) {
+      for (let i = 0; i < FileArray.length; i++) {
+        if (FileArray[i].size / 1024 < 2000) {
+          console.log("file is okay");
+        } else
+          return `File ${FileArray[i]} is too big Please upload a 2Mb File`;
+      }
+    } else {
+      return false;
+    }
+  }
+
   const form = useForm({
     mode: "uncontrolled",
+
     initialValues: {
       email: "",
       fullname: "",
@@ -34,8 +58,8 @@ export default function MantineForm() {
       termsOfService: false,
       jobType: "Software",
       age: 18,
-      date: Date,
-      uploadResume: "",
+      date: null,
+      uploadResume: null,
     },
 
     onValuesChange: (values) => {
@@ -45,13 +69,27 @@ export default function MantineForm() {
     validate: {
       email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
       age: (value) => (value > 18 ? null : "You must be older than 18 "),
+      termsOfService: (value) =>
+        value === true
+          ? null
+          : "You cannot proceed without agreeing to terms & Conditions ",
+      fullname: (value) =>
+        value.length > 2 && value.length < 200
+          ? null
+          : "please write your full name",
+      // uploadResume : (value) => (value.length),
+      uploadResume: (value) =>
+        ValidateFiles(value) ? null : "You cannot upload more than 3 Files",
     },
   });
 
   return (
     <MantineProvider theme={theme}>
       <Container size="30rem" bg={"white"}>
-        <form onSubmit={form.onSubmit(() => console.log(form.getValues()))}>
+        <form
+          encType="multipart/form-data"
+          onSubmit={form.onSubmit(() => console.log(form.getValues()))}
+        >
           {/* Text */}
 
           <Space h="md" />
@@ -83,7 +121,6 @@ export default function MantineForm() {
             name="gender"
             label="Please select your Gender "
             withAsterisk
-            defaultValue="Male"
             key={form.key("gender")}
           >
             <Group mt="xs">
@@ -120,8 +157,6 @@ export default function MantineForm() {
           />
           <Space h="md" />
 
-
-
           <DateInput
             clearable
             defaultValue={new Date()}
@@ -130,8 +165,6 @@ export default function MantineForm() {
             key={form.key("date")}
             {...form.getInputProps("date")}
           />
-
-
 
           <Space h="md" />
           <FileInput
