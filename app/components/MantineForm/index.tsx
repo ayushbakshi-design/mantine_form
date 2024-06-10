@@ -1,10 +1,10 @@
 "use client";
 
-import { MantineProvider } from "@mantine/core";
+import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
-import { theme } from "../../theme";
 import { DateInput } from "@mantine/dates";
 import {
+  MantineProvider,
   Button,
   Checkbox,
   Group,
@@ -18,35 +18,44 @@ import {
   Container,
 } from "@mantine/core";
 
-// ✅ Correct order
+// Importing Stylesheets for Individual Componenets As per Mantine documentation
+import MantineProviderTheme from "../../../MantineProviderTheme";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/core/styles/Input.css";
 
 export default function MantineForm() {
-  // interface InitialValues {
-  //   email: string,
-  //   fullname: string,
-  //   gender: string,
-  //   termsOfService: boolean,
-  //   jobType: string,
-  //   age: number,
-  //   date: Date,
-  //   uploadResume: File,
-  //  }
-
-  function ValidateFiles(FileArray: null | Array<File>) {
-    if (FileArray.length < 4) {
-      for (let i = 0; i < FileArray.length; i++) {
-        if (FileArray[i].size / 1024 < 2000) {
-          console.log("file is okay");
-        } else
-          return `File ${FileArray[i]} is too big Please upload a 2Mb File`;
-      }
-    } else {
-      return false;
-    }
+  interface InitialValuesInterface {
+    email: string;
+    fullname: string;
+    gender: string;
+    termsOfService: boolean;
+    jobType: string;
+    age: number;
+    date: Date;
+    uploadResume: File[];
   }
+
+  const [SelectedFiles, SetSelectedFiles] = useState<File[]>([]);
+  const MaxFileSize = 2 * 1024 * 1024;
+
+  useEffect(() => {
+    form.setFieldValue("uploadResume", SelectedFiles);
+    console.log(SelectedFiles);
+  }, [SelectedFiles]);
+
+  const ValidateFiles = (FileArray: File[]) => {
+    FileArray.forEach((file, index) => {
+      if (file.size > MaxFileSize) {
+        alert(
+          `File ${index + 1} is larger than 2Mb. Please select anothe file`
+        );
+        form.setFieldValue("uploadResume", []);
+      } else {
+        SetSelectedFiles(() => [...SelectedFiles, ...FileArray]);
+      }
+    });
+  };
 
   const form = useForm({
     mode: "uncontrolled",
@@ -58,33 +67,30 @@ export default function MantineForm() {
       termsOfService: false,
       jobType: "Software",
       age: 18,
-      date: null,
-      uploadResume: null,
-    },
-
-    onValuesChange: (values) => {
-      console.log(values);
-    },
+      date: new Date(),
+      uploadResume: [],
+    } as InitialValuesInterface,
 
     validate: {
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
-      age: (value) => (value > 18 ? null : "You must be older than 18 "),
-      termsOfService: (value) =>
+      email: (value: string) =>
+        /^\S+@\S+$/.test(value) ? null : "Invalid email",
+      age: (value: number) =>
+        value > 18 ? null : "You must be older than 18 ",
+      termsOfService: (value: boolean) =>
         value === true
           ? null
           : "You cannot proceed without agreeing to terms & Conditions ",
-      fullname: (value) =>
-        value.length > 2 && value.length < 200
+      fullname: (value: string) =>
+        value.length > 2 && value.length < 50
           ? null
           : "please write your full name",
-      // uploadResume : (value) => (value.length),
-      uploadResume: (value) =>
-        ValidateFiles(value) ? null : "You cannot upload more than 3 Files",
+      uploadResume: (value: File[]) =>
+        value.length < 4 ? null : "you cannot uplaod more than 3 Files",
     },
   });
 
   return (
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={MantineProviderTheme}>
       <Container size="30rem" bg={"white"}>
         <form
           encType="multipart/form-data"
@@ -124,16 +130,8 @@ export default function MantineForm() {
             key={form.key("gender")}
           >
             <Group mt="xs">
-              <Radio
-                value="Male"
-                label="Male"
-                {...form.getInputProps("gender")}
-              />
-              <Radio
-                value="Female"
-                label="Female"
-                {...form.getInputProps("gender")}
-              />
+              <Radio value="Male" label="Male" />
+              <Radio value="Female" label="Female" />
             </Group>
           </Radio.Group>
 
@@ -174,6 +172,7 @@ export default function MantineForm() {
             multiple
             key={form.key("uploadResume")}
             {...form.getInputProps("uploadResume")}
+            onChange={ValidateFiles}
           />
 
           <Space h="sm" />

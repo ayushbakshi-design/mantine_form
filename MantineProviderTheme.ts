@@ -10,4 +10,7 @@ import {
     defaultRadius: 0,
   });
   
-  export const theme = mergeMantineTheme(DEFAULT_THEME, themeOverride);
+  const MantineProviderTheme = mergeMantineTheme(DEFAULT_THEME, themeOverride);
+
+
+  export default MantineProviderTheme;
