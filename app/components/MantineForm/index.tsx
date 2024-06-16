@@ -41,7 +41,6 @@ export default function MantineForm() {
 
   useEffect(() => {
     form.setFieldValue("uploadResume", SelectedFiles);
-    console.log(SelectedFiles);
   }, [SelectedFiles]);
 
   const ValidateFiles = (FileArray: File[]) => {
